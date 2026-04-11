@@ -201,6 +201,10 @@ body{font-family:'Nunito',sans-serif;overflow-x:hidden;background:#87ceeb}
 
 .absent-box{background:#fff5f5;border:1.5px solid #f5b8b8;border-radius:14px;padding:1.2rem;text-align:center;margin:1rem 0;display:none;animation:fadeUp .4s ease both}
 .absent-box p{color:#a32d2d;font-size:.95rem;line-height:1.7}
+.absent-box .frow{text-align:left;margin-top:.9rem}
+.absent-box .frow label{color:#a32d2d}
+.absent-box .frow input{border-color:#f5b8b8}
+.absent-box .frow input:focus{border-color:#e24b4a;box-shadow:0 0 0 3px rgba(226,75,74,.12)}
 
 #steps-yes{animation:fadeUp .45s cubic-bezier(.34,1.56,.64,1) both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
@@ -371,7 +375,11 @@ body{font-family:'Nunito',sans-serif;overflow-x:hidden;background:#87ceeb}
 
         <div class="absent-box" id="absent-box">
           <p>😢 Tu vas nous manquer !<br>Merci quand même de nous avoir répondu.</p>
-          <button class="submit-btn" style="margin-top:1rem;font-size:1.2rem" onclick="submitAbsent()">Envoyer ma réponse</button>
+          <div class="frow">
+            <label>Ton prénom et nom</label>
+            <input type="text" id="absent-name" placeholder="ex : Marie Dupont">
+          </div>
+          <button class="submit-btn" style="margin-top:1rem;font-size:1.2rem" id="absent-submit-btn" onclick="submitAbsent()">Envoyer ma réponse</button>
         </div>
 
         <div id="steps-yes" style="display:none">
@@ -583,10 +591,21 @@ async function sendFS(data){
 }
 
 async function submitAbsent(){
-  const btn=document.querySelector('.absent-box .submit-btn');
+  const nameVal=document.getElementById('absent-name').value.trim();
+  if(!nameVal){
+    document.getElementById('absent-name').focus();
+    document.getElementById('absent-name').style.borderColor='#e24b4a';
+    document.getElementById('absent-name').style.boxShadow='0 0 0 3px rgba(226,75,74,.15)';
+    setTimeout(()=>{
+      document.getElementById('absent-name').style.borderColor='';
+      document.getElementById('absent-name').style.boxShadow='';
+    },2000);
+    return;
+  }
+  const btn=document.getElementById('absent-submit-btn');
   btn.disabled=true;btn.textContent='Envoi...';
-  const ok=await sendFS({presence:'Non — ne pourra pas venir'});
-  if(ok){showSuccess(false,[]);}
+  const ok=await sendFS({presence:'Non — ne pourra pas venir',nom:nameVal});
+  if(ok){showSuccess(false,[],nameVal);}
   else{btn.disabled=false;btn.textContent='Envoyer ma réponse';alert('Erreur réseau, réessaie.');}
 }
 
@@ -611,7 +630,7 @@ async function submitForm(){
   else{btn.disabled=false;btn.textContent='Envoyer ma présence 🎈';alert('Erreur réseau, vérifie ta connexion.');}
 }
 
-function showSuccess(coming,guests){
+function showSuccess(coming,guests,absentName){
   document.getElementById('form-content').style.display='none';
   const box=document.getElementById('success-box');
   box.classList.add('show');
@@ -623,7 +642,7 @@ function showSuccess(coming,guests){
   } else {
     document.getElementById('s-icon').textContent='💙';
     document.getElementById('s-title').textContent='Merci pour ta réponse !';
-    document.getElementById('s-text').textContent='Tu vas nous manquer ! À très bientôt pour un câlin de Lonam Neil 🐻';
+    document.getElementById('s-text').innerHTML=`<strong>${absentName}</strong>, tu vas nous manquer !<br>À très bientôt pour un câlin de Lonam Neil 🐻`;
   }
 }
 </script>
